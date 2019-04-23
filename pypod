@@ -1,0 +1,129 @@
+#!/usr/bin/env python
+
+
+import feedparser
+from subprocess import call
+import json
+import sys
+import mplayer
+from termcolor import colored
+
+
+podcasts = {
+        'reply all': 'http://feeds.gimletmedia.com/hearreplyall',
+        'serial' : 'http://feeds.serialpodcast.org/serialpodcast',
+        'philosophize this' : 'http://philosophizethis.libsyn.com/rss',
+        'ted talks daily' : 'http://feeds.feedburner.com/TEDTalks_audio',
+        'darknet diaries' : 'https://feeds.megaphone.fm/darknetdiaries',
+        'going deep with chad & jt' : 'http://goingdeepwithchadandjt.libsyn.com/rss',
+        'the stuff they don\'t want you to know' : 'https://feeds.megaphone.fm/stufftheydontwantyoutoknow'
+        }
+
+
+# clear terminal
+call(["clear"])
+
+
+# print podcasts
+for i, podcast in enumerate(podcasts):
+    print colored(str(i) + ':','green'), podcast
+
+# ask for feed
+podcast_choice = int(raw_input("\npodcast: "))
+
+
+# store chosen episode
+chosen_podcast = podcasts[podcasts.keys()[podcast_choice]]
+
+# space
+print ""
+
+# create episode list 
+episode_list = []
+
+# get podcast feed
+feed = feedparser.parse(chosen_podcast)
+
+# where to start print podcasts
+episode_index = 0
+
+# flag for selection
+selected = False
+
+# loop until number selected
+while not selected:
+
+    # clear terminal
+    call(["clear"])
+
+
+    for i in range(episode_index, episode_index+10):
+        print colored(str(i) + ":", "green"), feed.entries[i].title
+
+    # get episode choice
+    episode_choice = raw_input("\nepisode: ")
+
+    # increment episode index 
+    if episode_choice == ">":
+        episode_index = episode_index + 10
+
+    # decrement episode index 
+    elif episode_choice == "<":
+        episode_index = episode_index - 10
+
+    else:
+        episode_choice = int(episode_choice)
+
+        # set complete flag
+        selected = True
+ 
+# clear terminal
+call(["clear"])
+
+# set save directory
+directory = "/home/nick/opt/bin/"
+
+# parsed = json.loads(str(feed))
+
+# print(json.dumps(parsed, indent=2, sort_keys=True))
+
+# sys.exit()
+
+
+# check RSS link format
+if "link" in feed.entries[episode_choice]:
+    # set episode link
+    episode_link = feed.entries[episode_choice].link
+else:
+    # set episode link
+    episode_link = feed.entries[episode_choice].media_content[0]["url"]
+
+
+
+# set episode name
+episode_name = feed.entries[episode_choice].title
+
+# set podcast info
+podcast_info = feed.feed.title + ": " + episode_name
+
+
+# print podcast name
+print "now playing: ", colored(podcast_info, "green")
+
+# add spacing
+print "\n"
+
+# create save file
+save_file = open(directory + ".podcast_playing","w")
+
+# write to file
+save_file.write(podcast_info)
+
+# close file
+save_file.close()
+
+# start mplayer
+call(['mplayer', episode_link])
+    
+# clear playing_file 
+open(directory + ".podcast_playing", "w").close()
